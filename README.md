@@ -11,6 +11,20 @@ use that a larger application would need.
   <img src="docs/img/forklift.jpg" width="250" height="250" border="0" />
 </p>
 
+## Basic Editing
+
+The basic editing of the data is simple - the main page is at `localhost:8080` and looks like:
+
+<p align="center">
+  <img src="docs/img/homepage.jpg" width="500" height="351" border="0" />
+</p>
+
+The grid is very much like Excel - move around with the arrow keys, type in a new
+value, and then if you decide you _don't_ like the value, click on the `Undo` button
+at the bottom.
+
+When you are ready to save these values, click on the `Save` button.
+
 ## Deployment
 
 The _intended_ deployment scheme is not yet set, but it runs just fine on a laptop.
@@ -183,6 +197,9 @@ and then you can monitor the log in the `/log` directory:
 ```bash
 $ tail -f log/inventory.log
 ```
+
+At this point, point a browser to `localhost:8080` and you should see the opening
+page.
 
 ## Release Notes
 
