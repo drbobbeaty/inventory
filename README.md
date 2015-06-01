@@ -8,7 +8,8 @@ that it can serve as a simple exercise, but with all the configuration and datab
 use that a larger application would need.
 
 <center>
-  <img src="docs/img/forklift.jpg" width="250" height="250" border="0" />
+  <img src="docs/img/forklift.jpg" width="250" height="250" border="0"
+  style="margin-left: auto; margin-right: auto;" />
 </center>
 
 ## Deployment
