@@ -1,0 +1,288 @@
+#!/bin/bash
+
+#
+# This is a simple script that will handle all the deployment of the project
+# to the UAT and/or production hosts in the datacenter. This is meant to be a
+# very simple tool, but it serves a very valuable function.
+#
+
+#
+# This function will make sure that you are located in a directory where
+# you can build the project. This can be the current directory (if RAW_DEPLOY
+# is set) or it can be a new checkout of the code based on the SHA (or 'master').
+# This function returns to the caller in that directory, so you might want to
+# save where you are BEFORE calling this guy.
+#
+function checkout_code {
+	build_dir=''
+	if [ "$RAW_DEPLOY" = "" ]; then
+		echo "[main] Checking out the code from $sha..."
+		origin="`pwd`/.git"
+		build_dir="$(mktemp -d /tmp/bartender_build.XXXXXX)"
+		if [ -d $build_dir ]; then
+			cd $build_dir
+			( git init && git remote add origin $origin && git fetch && git checkout $sha ) &>/dev/null
+		fi
+	fi
+}
+
+
+#
+# This function builds the jar for the specific target host passed in as
+# the first parameter. The reason that it's possible to have a specific
+# config is that we might have a series of hosts in each deployment, and
+# there may be masters and slaves, and in that case, we need to really be
+# able to configure it by the host.
+#
+# $1 = host
+#
+function build_jar {
+	# pull in the config file for this host
+	if [ "$verbose" != "" ]; then
+		echo "[$1] Configuring the uberjar for host..."
+	fi
+	host_config="$deploy_loc/config/$1"
+	tmp_config=''
+	if [ -f $config_file ]; then
+		tmp_config="$(mktemp /tmp/bartender_config.XXXXXX)"
+		cp $config_file $tmp_config
+	fi
+	if [ -f $host_config ]; then
+		cp $host_config $config_file
+	fi
+
+	# now let's build the uberjar...
+	if [ "$verbose" != "" ]; then
+		echo "[$1] Building the uberjar..."
+	fi
+	lein uberjar >/dev/null
+	if [ $? -gt 0 ]; then
+		exit 1
+	fi
+
+	# finally, replace the config file - if it was moved
+	if [ "$tmp_config" != "" ]; then
+		cp $tmp_config $config_file
+		rm -rf $tmp_config
+	fi
+}
+
+
+#
+# This function uploads the generated jar to the host passed in as
+# the first argument to the function. It looks at the state of RAW_DEPLOY
+# to see if it should overwrite the target string - to make sure you don't
+# do work that's already done.
+#
+# $1 = host
+#
+function upload_jar {
+	# get the remote name of the jar - including the identifying source
+	ver=`git rev-parse $sha`
+	suffix=${ver:0:8}
+	if [ "$RAW_DEPLOY" != "" ]; then
+		suffix="working-directory-$USER"
+	fi
+	remote_file="bartender-$suffix.jar"
+
+	# see if we're just building - or deploying as well
+	if [ "$just_build" = "yes" ]; then
+		echo "[$1] Copying $remote_file"
+		local uj_ver=`head -1 project.clj | sed -e 's/^.* \"//' -e 's/\"//'`
+		cp target/bartender-${uj_ver}-standalone.jar "$cwd/$remote_file"
+	else
+		# now push this to the host and link it once it's there
+		safe='yes'
+		if [ "$RAW_DEPLOY" = "" ]; then
+			ssh $deploy_user@$1 "test -e $remote_file"
+			if [ $? -eq 0 ]; then
+				safe='no'
+				echo "[$1] $remote_file not uploaded because it already exists!"
+			fi
+		fi
+
+		if [ "$safe" = "yes" ]; then
+			echo "[$1] Uploading $remote_file"
+			local uj_ver=`head -1 project.clj | sed -e 's/^.* \"//' -e 's/\"//'`
+			scp target/bartender-${uj_ver}-standalone.jar "$deploy_user@$1:./$remote_file" >/dev/null 2>&1
+			echo "[$1] Linking $remote_file"
+			ssh $deploy_user@$1 "ln -sf $remote_file $deployed_jar" >/dev/null 2>&1
+		fi
+
+		# upload the logback config file - if we have it
+		logback="$deploy_loc/logback/$1"
+		if [ -f $logback ]; then
+			echo "[$1] Uploading logback config to ~/logback-test.xml"
+			scp $logback "$deploy_user@$1:logback-test.xml" >/dev/null 2>&1
+		fi
+	fi
+}
+
+
+#
+# This function takes a target host ($1) and a deployment directory ($2)
+# and copies all the files in the directory up to the host in the same
+# directory relative to its $HOME directory. This is a simple way to deploy
+# simple scripts to the host.
+#
+# $1 = host
+# $2 = dir
+#
+function upload_directory {
+	ssh $deploy_user@$1 "mkdir -p ./$2"
+	src_dir="$deploy_loc/$2"
+	links=''
+	if [ -d $src_dir ]; then
+		for f in $src_dir/*; do
+			if [ -L $f ]; then
+				# save all the links for the NEXT phase
+				links="$links $f"
+			elif [ -f $f ]; then
+				echo "[$1] Uploading $2/`basename $f` to ~/$2"
+				scp $f "$deploy_user@$1:./$2/" >/dev/null 2>&1
+			fi
+		done
+		# now do all the links AFTER the files are up there
+		for f in $links; do
+			anchor=`readlink $f`
+			cmd=`basename $f`
+			echo "[$1] Linking $2/$cmd to ~/$2/$anchor"
+			ssh $deploy_user@$1 "ln -sf ~/$2/$anchor ~/$2/$cmd" >/dev/null 2>&1
+		done
+	fi
+}
+
+
+#
+# This function takes a target host ($1) and looks in the deployment
+# directory for a crontab for that host, and if it's found, it deploys
+# that crontab to the host and installs it.
+#
+# $1 = host
+#
+function update_crontab {
+	src_crontab="$deploy_loc/crontabs/$1"
+	if [ -f $src_crontab ]; then
+		echo "[$1] Updating crontab on $1"
+		scp $src_crontab "$deploy_user@$1:crontab.tmp" >/dev/null 2>&1
+		ssh $deploy_user@$1 "crontab crontab.tmp; rm crontab.tmp"
+	fi
+}
+
+
+#
+# This function takes a target host ($1) and looks in the deployment
+# directory for a init.d script for that host, and if it's found, it
+# deploys that to the host and installs it in /usr/local/etc/init.d
+#
+# $1 = host
+#
+function update_init_d {
+	src_init_d="$deploy_loc/init.d/$1"
+	if [ -f $src_init_d ]; then
+		echo "[$1] Updating init.d for $1"
+		scp $src_init_d "$1:init.d_bartender.tmp" >/dev/null 2>&1
+		ssh $1 "sudo cp init.d_bartender.tmp /usr/local/etc/init.d/bartender; rm init.d_bartender.tmp"
+
+		src_rc_d="$deploy_loc/rc.d"
+		if [ -d $src_rc_d ]; then
+			echo "[$1] Updating rc.d for $1"
+			scp -r $src_rc_d "$1:tmp_rc.d" >/dev/null 2>&1
+			ssh $1 "sudo cp tmp_rc.d/* /usr/local/etc/rc.d/; rm -rf tmp_rc.d"
+		fi
+	fi
+}
+
+
+#
+# This is the main deployment function
+#
+function deploy {
+	# checkout the code - if we need to...
+	checkout_code
+	# for each target host, build the right jar (with config) and upload it
+	for h in $hosts; do
+		build_jar $h
+		upload_jar $h
+	done
+
+	# only do the rest if we're doing a complete deployment
+	if [ "$just_build" = "" ]; then
+		# upload the script directories to the hosts as well
+		for h in $hosts; do
+			for d in $push_dirs; do
+				upload_directory $h $d
+			done
+		done
+		# update the crontabs on the target host(s)
+		for h in $hosts; do
+			update_crontab $h
+			update_init_d $h
+		done
+	fi
+}
+
+
+# save where we are and start all the real work
+cwd=`pwd`
+
+# Set up the defaults
+verbose=''
+just_build=''
+deploy_user="bartender"
+deployed_jar="bartender-current.jar"
+config_file="resources/config.clj"
+sha=`git rev-parse --abbrev-ref HEAD`
+hosts=""
+crontabs=""
+deploy_loc="deploy"
+push_dirs="bin"
+# ...now update these values based on environment variables
+if [ "$SHA" != "" ]; then
+	sha="$SHA"
+fi
+if [ "$HOSTS" != "" ]; then
+	hosts="$HOSTS"
+	deploy
+fi
+
+# first, scan ALL the args to see what we might need to know
+for arg in "$@"; do
+	case "$arg" in
+		-v|--v|-verbose|--verbose)
+			verbose='yes'
+			;;
+		justbuild|just_build|-build|--build)
+			just_build='yes'
+			;;
+	esac
+done
+
+# now let's run through the arguments again - this time processing as we go
+for arg in "$@"; do
+	case "$arg" in
+		prod|production|Production)
+			hosts="prospero-utility1.snc1 opt-finch-rpt1.snc1 opt-finch-rpt2.snc1"
+			deploy
+			;;
+		uat|UAT)
+			hosts="bbox.centro.east"
+			deploy
+			;;
+	esac
+done
+
+# now update the crontabs of the machines where that's all we have
+if [ "$just_build" = "" ]; then
+	for h in $crontabs; do
+		update_crontab $h
+	done
+fi
+
+# clean up anything we created
+if [[ ( "$build_dir" != "" ) && ( -d $build_dir ) ]]; then
+	rm -rf $build_dir
+fi
+
+cd $cwd
+exit 0
