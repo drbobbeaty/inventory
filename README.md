@@ -7,10 +7,9 @@ with a front-end of Bootstrap and [Handsontable](http://handsontable.com) so
 that it can serve as a simple exercise, but with all the configuration and database
 use that a larger application would need.
 
-<center>
-  <img src="docs/img/forklift.jpg" width="250" height="250" border="0"
-  style="margin-left: auto; margin-right: auto;" />
-</center>
+<p align="center">
+  <img src="docs/img/forklift.jpg" width="250" height="250" border="0" />
+</p>
 
 ## Deployment
 
