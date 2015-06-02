@@ -66,7 +66,16 @@ When you are ready to save these values, click on the `Save` button.
 The back-end is a simple [Compojure](https://github.com/weavejester/compojure)
 service and the UI simply calls two endpoints to do everything necessary. These
 can be called from any other process, so we're going to document them here so
-that it's easy to see how to make use of this interface
+that it's easy to see how to make use of this interface.
+
+Because we have now moved to using the [Google Identity](https://developers.google.com/identity/) platform, it's important that each of the RESTful calls includes the
+authorization token from the Google JavaScript library. The authorization token
+needs to be passed in the headers as:
+```
+Authorization: bearer XYZ1234567890
+```
+and the service will extract this on _**each**_ call and verify that this token
+is valid, and that the user that it corresponds to is authorized to make the call.
 
 ### Getting the Current Auto Inventory
 
