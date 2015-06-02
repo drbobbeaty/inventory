@@ -7,12 +7,12 @@ function buildTable() {
   // make the call to pull the data with column and row headers
   $.getJSON("/v1/cars", function(data) {
     // get the components we need from the returned JSON
-    $("#mainTable").handsontable({ data: data.data,
-                                   colHeaders: data.colHeaders,
+    $("#mainTable").handsontable({ data: data.inventory,
+                                   colHeaders: data.manufacturers,
                                    stretchH: 'all',
                                    contextMenu: false,
                                    manualColumnResize: true,
-                                   rowHeaders: data.rowHeaders });
+                                   rowHeaders: data.model_years });
   });
 }
 
@@ -25,9 +25,9 @@ function saveData() {
   // let the user know it's being done
   console.log("attempting to save the data");
   // get the data from the table
-  var body = { colHeaders: $('#mainTable').handsontable('getColHeader'),
-               rowHeaders: $('#mainTable').handsontable('getRowHeader'),
-               data: $('#mainTable').handsontable('getData') };
+  var body = { manufacturers: $('#mainTable').handsontable('getColHeader'),
+               model_years: $('#mainTable').handsontable('getRowHeader'),
+               inventory: $('#mainTable').handsontable('getData') };
   // now, make the POST to update the data
   $.ajax({type: "POST",
           url: "/v1/cars",

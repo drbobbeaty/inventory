@@ -85,16 +85,13 @@
     (return-code 200))
   ;; pull the inventory of cars we have right now
   (GET "/v1/cars" []
-    (let [inv (core/pull-cars)]
-      (return-json {:colHeaders (:manufacturers inv)
-                    :rowHeaders (:model_years inv)
-                    :data (:inventory inv)})))
+    (return-json (core/pull-cars)))
   ;; let's update the inventory of cars we should have now
   (POST "/v1/cars" [:as {body :body}]
     (let [cfg (json/parse-string (slurp body) true)
-          manus (:colHeaders cfg)
-          years (:rowHeaders cfg)
-          tdata (:data cfg)]
+          manus (:manufacturers cfg)
+          years (:model_years cfg)
+          tdata (:inventory cfg)]
       (if (and (coll? manus) (coll? years) (coll? tdata))
         (return-json (core/update-cars! manus years tdata))
         (return-code 400))))

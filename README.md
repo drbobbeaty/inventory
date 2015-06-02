@@ -41,15 +41,15 @@ GET /v1/cars
 and the data returned is a simple JSON map looking something like this:
 ```json
 {
-  "colHeaders": ["Kia", "Nissan", "Toyota"],
-  "rowHeaders": ["2008", "2009", "2010"],
-  "data": [[100, 11, 12],
-           [200, 11, 14],
-           [300, 15, 12]]
+  "manufacturers": ["Kia", "Nissan", "Toyota"],
+  "model_years": ["2008", "2009", "2010"],
+  "inventory": [[100, 11, 12],
+                [200, 11, 14],
+                [300, 15, 12]]
 }
 ```
-and while the keys aren't all that well-named, that's easy enough to change
-later on as this example matures.
+where the `inventory` data is organized by `model_year` and then `manufacturer`
+in a somewhat condensed format for less waste of bandwidth in the transfer.
 
 ### Updating New Auto Inventory
 
@@ -60,11 +60,11 @@ POST /v1/cars
 and the body of the `POST` looking just like the return values of the `GET`:
 ```json
 {
-  "colHeaders": ["Kia", "Nissan", "Toyota"],
-  "rowHeaders": ["2008", "2009", "2010"],
-  "data": [[100, 11, 12],
-           [200, 11, 14],
-           [300, 15, 12]]
+  "manufacturers": ["Kia", "Nissan", "Toyota"],
+  "model_years": ["2008", "2009", "2010"],
+  "inventory": [[100, 11, 12],
+                [200, 11, 14],
+                [300, 15, 12]]
 }
 ```
 The return value will be a JSON map something like this:
