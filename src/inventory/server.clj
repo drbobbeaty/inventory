@@ -60,7 +60,7 @@
                          ;; at this point it is too late to report the error
                          ;; as a 500. The best we can do is abruptly print
                          ;; an error and quit.
-                         (.write bw "\n\n---CRYPTOQUIP SERVICE ERROR WHILE STREAMING JSON---\n")
+                         (.write bw "\n\n---INVENTORY SERVICE ERROR WHILE STREAMING JSON---\n")
                          (.write bw (str e "\n\n"))
                          (warnf "Streaming exception for JSONP: %s" (.getMessage e)))]
                    (try
