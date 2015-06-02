@@ -1,8 +1,11 @@
 (ns inventory.core
 	"Main namespace for what needs to be done"
-  (:require [clojure.tools.logging :refer [error info infof]]
+  (:require [clj-time.coerce :refer [to-timestamp]]
+            [clj-time.core :refer [now]]
+            [clojure.tools.logging :refer [error info infof]]
             [inventory.database :as db]
-            [inventory.logging :refer [log-execution-time!]]))
+            [inventory.logging :refer [log-execution-time!]]
+            [inventory.util :refer [parse-int]]))
 
 (defn pull-cars
   "Function to pull the most recent auto inventory from the database and
@@ -26,3 +29,22 @@
 
 (log-execution-time! pull-cars)
 
+(defn update-cars!
+  "Function to update the complete inventory based on the current values passed
+  in."
+  [manus years inv]
+  (if (and manus years inv)
+    (let [as-of (to-timestamp (now))
+          raw (apply concat (for [[y cnts] (map vector years inv)]
+                              (for [[m cnt] (map vector manus cnts)]
+                                { :as_of as-of
+                                  :model_year y
+                                  :manufacturer m
+                                  :quantity (parse-int cnt) }
+                              )))
+          resp (db/insert! :cars raw)]
+      (if resp
+        {:status "OK"}
+        {:status "Error"}))))
+
+(log-execution-time! update-cars!)

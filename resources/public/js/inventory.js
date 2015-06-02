@@ -35,10 +35,18 @@ function saveData() {
           contentType: 'application/json',
           data: JSON.stringify(body),
           success: function(resp) {
-            var cont = '<div class="alert alert-success" role="alert">';
-            cont += '<strong>Saved!</strong>';
-            cont += '</div>';
-            $("#status").replaceWith(cont);
+            console.log(resp);
+            if (resp.status == "OK") {
+              var cont = '<div class="alert alert-success" role="alert">';
+              cont += '<strong>Saved!</strong>';
+              cont += '</div>';
+              $("#status").replaceWith(cont);
+            } else {
+              var cont = '<div class="alert alert-danger" role="alert">';
+              cont += '<strong>Error!</strong>';
+              cont += '</div>';
+              $("#status").replaceWith(cont);
+            }
           }
   });
 }

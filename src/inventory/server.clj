@@ -9,6 +9,7 @@
             [clojure.tools.logging :refer [infof warn warnf error errorf]]
             [cheshire.core :as json]
             [inventory.core :as core]
+            [inventory.util :refer [ucase]]
             [ring.middleware.jsonp :refer [wrap-json-with-padding]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.response :as resp]
@@ -91,17 +92,12 @@
   ;; let's update the inventory of cars we should have now
   (POST "/v1/cars" [:as {body :body}]
     (let [cfg (json/parse-string (slurp body) true)
-          ; quip (:cyphertext cfg)
-          ; clue (into {} (for [[k v] (:clue cfg)] [(first (name k)) (first v)]))
-          ]
-      (infof "got %s" (pr-str cfg))
-      ; (if (and (string? quip) (map? clue))
-      ;   (return-json {:cyphertext quip
-      ;                 :clue (into {} (for [[k v] clue] [(str k) (str v)]))
-      ;                 :plaintext (blk/solve quip clue)})
-      ;   (return-code 400))
-      (return-code 200)
-      ))
+          manus (:colHeaders cfg)
+          years (:rowHeaders cfg)
+          tdata (:data cfg)]
+      (if (and (coll? manus) (coll? years) (coll? tdata))
+        (return-json (core/update-cars! manus years tdata))
+        (return-code 400))))
   ;; Finish up with the static resources and the 404 page
   (route/resources "/")
   (route/not-found "<h1>Page not Found!</h1>"))
@@ -110,7 +106,7 @@
   "Ring middleware to log requests and exceptions."
   [handler]
   (fn [req]
-    (infof "Handling request: %s" (:uri req))
+    (infof "Handling request: %s %s from: %s" (ucase (name (:request-method req))) (:uri req) (:remote-addr req))
     (try (handler req)
          (catch Throwable t
            (error t "Server error!")
