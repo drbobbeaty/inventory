@@ -13,6 +13,9 @@
     <link href="/css/theme.css" rel="stylesheet">
     <!-- add in the hands-on-table -->
     <link rel="stylesheet" media="screen" href="/css/handsontable.full.min.css">
+    <!-- add in the Google code for OAuth2 usage -->
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="658008080308-lbbku7nfnl58c28n8hfsdug2mbob3343.apps.googleusercontent.com">
   </head>
 
   <body role="document">
@@ -75,6 +78,11 @@
           This is the status of a save
         </div>
       </div>
+
+      <!-- add the Google sign-in button -->
+      <div align="center">
+        <div class="g-signin2" data-onsuccess="onSignIn"></div>
+      </div>
     </div> <!-- /container -->
 
     <!-- Bootstrap core JavaScript
@@ -86,7 +94,7 @@
     <script src="/js/inventory.js"></script>
     <script type="text/javascript">
       $( document ).ready(buildTable());
-      // $( window ).load(reloadAllData());
+      // $( window ).load(buildTable());
     </script>
   </body>
 </html>

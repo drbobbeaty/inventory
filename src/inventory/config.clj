@@ -20,3 +20,4 @@
 (def redis      (partial config :redis))
 (def database   (partial config :database))
 (def hipchat    (partial config :hipchat))
+(def google     (partial config :google))

@@ -11,6 +11,39 @@ use that a larger application would need.
   <img src="docs/img/forklift.jpg" width="250" height="250" border="0" />
 </p>
 
+## The Security Model
+
+One of the points of this project is to integrate with the
+[Google Identity](https://developers.google.com/identity/) platform so that you don't have to implement your own OAuth2 system - and yet, the system is as secure as you
+wish to make it. The [Google Identity](https://developers.google.com/identity/)
+as instructions for [web sites](https://developers.google.com/identity/sign-in/web/)
+and walks you through [creating an application](https://developers.google.com/identity/sign-in/web/devconsole-project) that you can then put into the `config.clj`:
+
+```clojure
+ ;; this is how to authenticate with Google's Identity Svc
+ :google {:token-url "https://www.googleapis.com/oauth2/v1/tokeninfo?id_token=%s"
+          :client-id "357000000000-ababababababababababababababa343.apps.googleusercontent.com"
+          :client-secret "abcabcabcabcabcabcabcabc"}
+```
+
+and then in the `index.html` as:
+```html
+    <!-- add in the Google code for OAuth2 usage -->
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="658008080308-lbbku7nfnl58c28n8hfsdug2mbob3343.apps.googleusercontent.com">
+```
+
+At this point, you should be set to go.
+
+The point of this is that Google will _Authenticate_ the user's `auth token` from
+the JavaScript library, that's included in the calls to the server in the
+headers under the key `Authorization`. It's then up to the service to look at
+that, make sure it's valid with Google, then compare the Gogle email address to
+a list of know "good" emails for using the app.
+
+Currently, this is just a simple set in the `inventory.google` namespace. But it
+could be as complex or as simple as you can imagine.
+
 ## Basic Editing
 
 The basic editing of the data is simple - the main page is at `localhost:8080` and looks like:

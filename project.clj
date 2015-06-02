@@ -15,6 +15,8 @@
                  [log4j/log4j "1.2.17"]
                  [org.clojure/tools.logging "0.2.6"]
                  [robert/hooke "1.3.0"]
+                 ;; HTTP Client
+                 [clj-http "1.1.2"]
                  ;; JSON parsing library
                  [cheshire "5.3.1"]
                  ;; web server
@@ -26,6 +28,5 @@
                  [c3p0 "0.9.1.2"]
                  [honeysql "0.5.2"]
                  [org.postgresql/postgresql "9.4-1201-jdbc41"]
-                 [org.clojure/java.jdbc "0.3.2"]
-                 ]
+                 [org.clojure/java.jdbc "0.3.2"]]
   :main inventory.main)

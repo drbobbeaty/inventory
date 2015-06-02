@@ -13,5 +13,10 @@
             :subname "//localhost/inventory"
             :user "drbob"
             :migrator "drbob"}
+
+ ;; this is how to authenticate with Google's Identity Svc
+ :google {:token-url "https://www.googleapis.com/oauth2/v1/tokeninfo?id_token=%s"
+          :client-id "357000000000-ababababababababababababababa343.apps.googleusercontent.com"
+          :client-secret "abcabcabcabcabcabcabcabc"}
 }
 

@@ -9,6 +9,7 @@
             [clojure.tools.logging :refer [infof warn warnf error errorf]]
             [cheshire.core :as json]
             [inventory.core :as core]
+            [inventory.google :as ig]
             [inventory.util :refer [ucase]]
             [ring.middleware.jsonp :refer [wrap-json-with-padding]]
             [ring.middleware.params :refer [wrap-params]]
@@ -84,17 +85,23 @@
   (GET "/heartbeat" []
     (return-code 200))
   ;; pull the inventory of cars we have right now
-  (GET "/v1/cars" []
-    (return-json (core/pull-cars)))
+  (GET "/v1/cars" [:as {headers :headers}]
+    (let [auth (get (or headers {}) "authorization")]
+      (if (ig/authorized? auth)
+        (return-json (core/pull-cars))
+        (return-code 401))))
   ;; let's update the inventory of cars we should have now
-  (POST "/v1/cars" [:as {body :body}]
-    (let [cfg (json/parse-string (slurp body) true)
+  (POST "/v1/cars" [:as {headers :headers body :body}]
+    (let [auth (get (or headers {}) "authorization")
+          cfg (json/parse-string (slurp body) true)
           manus (:manufacturers cfg)
           years (:model_years cfg)
           tdata (:inventory cfg)]
-      (if (and (coll? manus) (coll? years) (coll? tdata))
-        (return-json (core/update-cars! manus years tdata))
-        (return-code 400))))
+      (if (ig/authorized? auth)
+        (if (and (coll? manus) (coll? years) (coll? tdata))
+          (return-json (core/update-cars! manus years tdata))
+          (return-code 400))
+        (return-code 401))))
   ;; Finish up with the static resources and the 404 page
   (route/resources "/")
   (route/not-found "<h1>Page not Found!</h1>"))

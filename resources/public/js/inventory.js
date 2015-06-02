@@ -1,21 +1,41 @@
 /*
+ * Function that's called on Google login to set the email and auth
+ * token to global vars so that we can use them in all the calls to
+ * the server. This is the security we'll be using.
+ */
+var user_auth_token = '';
+function onSignIn(googleUser) {
+  user_auth_token = googleUser.getAuthResponse().id_token;
+  // console.log('auth token: ' + user_auth_token);
+  // now let's try to get the data - as we had to have the token
+  buildTable();
+}
+
+/*
  * Function to load up the data at the start of the operation from the
  * back-end system into the page. This starts things off just fine.
  */
 function buildTable() {
-  console.log("attempting to load the data");
-  // make the call to pull the data with column and row headers
-  $.getJSON("/v1/cars", function(data) {
-    // get the components we need from the returned JSON
-    $("#mainTable").handsontable({ data: data.inventory,
-                                   colHeaders: data.manufacturers,
-                                   stretchH: 'all',
-                                   contextMenu: false,
-                                   manualColumnResize: true,
-                                   rowHeaders: data.model_years });
-    // hide the status as we are 'fresh' from the source now
-    $("#status").hide();
-  });
+  if (user_auth_token != '') {
+    console.log("attempting to load the data");
+    // make the call to pull the data with column and row headers
+    $.ajax({type: "GET",
+            url: "/v1/cars",
+            dataType: "json",
+            headers: { authorization: 'bearer ' + user_auth_token },
+            success: function(data) {
+              // get the components we need from the returned JSON
+              $("#mainTable").handsontable({ data: data.inventory,
+                                             colHeaders: data.manufacturers,
+                                             stretchH: 'all',
+                                             contextMenu: false,
+                                             manualColumnResize: true,
+                                             rowHeaders: data.model_years });
+              // hide the status as we are 'fresh' from the source now
+              $("#status").hide();
+            }
+    });
+  }
 }
 
 /*
@@ -34,6 +54,7 @@ function saveData() {
   $.ajax({type: "POST",
           url: "/v1/cars",
           processData: false,
+          headers: { authorization: 'bearer ' + user_auth_token },
           contentType: 'application/json',
           data: JSON.stringify(body),
           success: function(resp) {
