@@ -13,6 +13,8 @@ function buildTable() {
                                    contextMenu: false,
                                    manualColumnResize: true,
                                    rowHeaders: data.model_years });
+    // hide the status as we are 'fresh' from the source now
+    $("#status").hide();
   });
 }
 
@@ -35,17 +37,16 @@ function saveData() {
           contentType: 'application/json',
           data: JSON.stringify(body),
           success: function(resp) {
-            console.log(resp);
             if (resp.status == "OK") {
               var cont = '<div class="alert alert-success" role="alert">';
               cont += '<strong>Saved!</strong>';
               cont += '</div>';
-              $("#status").replaceWith(cont);
+              $("#status").html(cont).show().fadeOut(3000);
             } else {
               var cont = '<div class="alert alert-danger" role="alert">';
               cont += '<strong>Error!</strong>';
               cont += '</div>';
-              $("#status").replaceWith(cont);
+              $("#status").html(cont).show().fadeOut(5000);
             }
           }
   });
