@@ -10,11 +10,13 @@
             [inventory.logging :refer [log-execution-time!]]
             [inventory.util :refer [parse-int]]))
 
-(def authorized-users
+(defn authorized-users
   "This is the list of authorized users. It's easy to imagine this as a
   database call where the names are in a table, and the roles are part of
   that. But in this example, we'll keep it nice and simple."
-  #{"drbobbeaty@gmail.com"})
+  [user]
+  (let [valid (set (db/query ["select email from users"] :row-fn :email))]
+    (valid user)))
 
 (defn authorized?
   "Function to check the auth token provided to be one that was created for

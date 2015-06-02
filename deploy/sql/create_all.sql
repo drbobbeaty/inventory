@@ -23,3 +23,17 @@ create table if not exists cars (
 -- open up the table for everyone to read
 --
 grant select on cars to public;
+
+
+--
+-- this is the table for the list of authorized users
+--
+create table if not exists users (
+  email          varchar not null,
+  primary key (email)
+);
+
+--
+-- open up the table for everyone to read
+--
+grant select on users to public;

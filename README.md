@@ -41,8 +41,11 @@ headers under the key `Authorization`. It's then up to the service to look at
 that, make sure it's valid with Google, then compare the Gogle email address to
 a list of know "good" emails for using the app.
 
-Currently, this is just a simple set in the `inventory.google` namespace. But it
-could be as complex or as simple as you can imagine.
+Currently, this is a simple database table: `users`. The only column is the email
+address, and a simple `set` is made from the contents of this column. If the user's
+email is in this set, then they are _Authorized_ to do anything. Of course, a more
+complex structure with roles and responsibilities can be made, but this is a good
+start.
 
 ## Basic Editing
 
