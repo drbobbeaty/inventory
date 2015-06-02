@@ -13,13 +13,14 @@
   the inventory numbers. This is just something that makes it easy to look
   at the whole picture at once."
   []
-  (let [rows (db/query ["select model_year, manufacturer, sum(quantity) as quantity
+  (let [rows (db/query ["select as_of, model_year, manufacturer, sum(quantity) as quantity
                            from cars
                           where as_of = (select max(as_of) from cars)
-                         group by model_year, manufacturer"])
+                         group by as_of, model_year, manufacturer"])
         manus (sort (distinct (map :manufacturer rows)))
         years (sort (distinct (map :model_year rows)))]
-    { :manufacturers manus
+    { :as_of (:as_of (first rows))
+      :manufacturers manus
       :model_years years
       :inventory (for [y years]
                    (for [m manus]

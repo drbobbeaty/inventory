@@ -33,6 +33,8 @@ function buildTable() {
                                              rowHeaders: data.model_years });
               // hide the status as we are 'fresh' from the source now
               $("#status").hide();
+              // set the title of the main panel
+              $("#mainInventory").html("Inventory Management as of " + data.as_of.replace("T", " "));
             }
     });
   }
@@ -63,6 +65,8 @@ function saveData() {
               cont += '<strong>Saved!</strong>';
               cont += '</div>';
               $("#status").html(cont).show().fadeOut(3000);
+              // set the title of the main panel
+              $("#mainInventory").html("Inventory Management as of Now");
             } else {
               var cont = '<div class="alert alert-danger" role="alert">';
               cont += '<strong>Error!</strong>';

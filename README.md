@@ -86,6 +86,7 @@ GET /v1/cars
 and the data returned is a simple JSON map looking something like this:
 ```json
 {
+  "as_of": "2015-06-01T19:28:54.518Z",
   "manufacturers": ["Kia", "Nissan", "Toyota"],
   "model_years": ["2008", "2009", "2010"],
   "inventory": [[100, 11, 12],
