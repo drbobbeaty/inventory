@@ -1,6 +1,6 @@
 (defproject inventory "0.1.0"
   :description "Simple inventory control system where editing is allowed."
-  :url "http://example.com/FIXME"
+  :url "https://github.com/drbobbeaty/inventory"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :source-paths ["src"]
