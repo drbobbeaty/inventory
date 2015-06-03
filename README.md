@@ -201,11 +201,16 @@ Looking at the contents of that _starter_ file, we see:
             :subname "//localhost/inventory"
             :user "myuser"
             :migrator "myuser"}
+
+ ;; this is how to authenticate with Google's Identity Svc
+ :google {:token-url "https://www.googleapis.com/oauth2/v1/tokeninfo?id_token=%s"
+          :client-id "357000000000-ababababababababababababababa343.apps.googleusercontent.com"
+          :client-secret "abcabcabcabcabcabcabcabc"}
 }
 ```
 The file is simply a clojure map, where the _keys_ define the 'sections' in the configuration. There's one for the database - `:database`, and this is where you can change the name of the database you created, or point it to a shared database for testing.
 
-There are several sections that might not be used - `:webhdfs` is likely one, but if we need to be able to read/write Hadoop, then this will become _very_ handy.
+There are several sections that might not be used - `:webhdfs` is likely one, but if we need to be able to read/write Hadoop, then this will become _very_ handy. One that will certainly need to be updated is the `:google` section where the Google App you create will have it's own `:client-id` and `:client-secret`.
 
 ### Running the REPL
 
