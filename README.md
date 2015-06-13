@@ -77,6 +77,23 @@ Authorization: bearer XYZ1234567890
 and the service will extract this on _**each**_ call and verify that this token
 is valid, and that the user that it corresponds to is authorized to make the call.
 
+### Get the Current Version and Service info
+
+The call to get the simple version and commit information about the code running
+in this service is pretty simple:
+```
+GET /info
+```
+and the data returned is pretty simple:
+```json
+{
+	"app": "inventory service",
+  "code": "unknown commit",
+  "hello?": "World!",
+  "version": "0.1.0"
+}
+```
+
 ### Getting the Current Auto Inventory
 
 Getting the current inventory is accomplished with a simple call:

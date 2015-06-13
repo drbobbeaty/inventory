@@ -48,3 +48,25 @@
     (decimal? x) (int (if (pos? x) (min x Integer/MAX_VALUE) (max x Integer/MIN_VALUE)))
     (float? x) (int (if (pos? x) (min x Integer/MAX_VALUE) (max x Integer/MIN_VALUE)))
     :else x))
+
+(defn git-commit
+  "Tries to determine the currently deployed commit by looking for it
+  in the name of the jar. Returns nil if it cannot be determined."
+  []
+  (-> clojure.lang.RT
+      .getProtectionDomain
+      .getCodeSource
+      .getLocation
+      .getPath
+      java.io.File.
+      .getName
+      (->> (re-find #"-([a-f0-9]{5,})\.jar"))
+      second))
+
+(defn project-version
+  "Function to look at the 'project.clj' file and pick out the version of the
+  project for use *within* the code itself. This makes it easy to define - or
+  report - the version of this project without having to maintain it in
+  multiple places."
+  []
+  (-> "project.clj" slurp read-string (nth 2)))

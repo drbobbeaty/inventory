@@ -10,7 +10,7 @@
             [cheshire.core :as json]
             [inventory.core :as core]
             [inventory.google :as ig]
-            [inventory.util :refer [ucase]]
+            [inventory.util :refer [ucase git-commit project-version]]
             [ring.middleware.jsonp :refer [wrap-json-with-padding]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.response :as resp]
@@ -21,20 +21,6 @@
   org.joda.time.DateTime
   (to-json [t jg]
     (cheshire.generate/write-string jg (str t))))
-
-(defn git-commit
-  "Tries to determine the currently deployed commit by looking for it
-  in the name of the jar. Returns nil if it cannot be determined."
-  []
-  (-> clojure.lang.RT
-      .getProtectionDomain
-      .getCodeSource
-      .getLocation
-      .getPath
-      java.io.File.
-      .getName
-      (->> (re-find #"-([a-f0-9]{5,})\.jar"))
-      second))
 
 (defn return-code
   "Creates a ring response for returning the given return code."
@@ -81,6 +67,7 @@
   (GET "/info" []
     (return-json {:app "inventory service",
                   :hello? "World!",
+                  :version (project-version)
                   :code (or (git-commit) "unknown commit")}))
   (GET "/heartbeat" []
     (return-code 200))
